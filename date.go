@@ -51,12 +51,12 @@ type chanReturn struct {
 }
 
 //RandomDate produces weighted random dates and puts passes it into a channel
-func RandomDate(c configuration, date chan<- time.Time, quit <-chan bool, ret chan<- chanReturn, wID int) {
+func RandomDate(c configuration, date chan<- time.Time, ret chan<- chanReturn) {
 	const shortForm = "2006-01-02"
 
 	years, err := GetYears(c.StartYear, c.EndYear)
 	if err != nil {
-		log.Printf("WORKER-%d:RandomDate: Failed to get years\n", wID)
+		log.Printf("RandomDate: Failed to get years\n")
 		ret <- chanReturn{ok: false, message: err.Error()}
 	}
 
@@ -64,45 +64,39 @@ func RandomDate(c configuration, date chan<- time.Time, quit <-chan bool, ret ch
 
 	/*loop until told otherwise*/
 	for {
-		select {
-		/*if quit is sent!*/
-		case <-quit:
-			/*clean up*/
-			return
-		default:
-			if len(date) < cap(date) {
-				yearChoice, err := randutil.WeightedChoice(years)
-				if err != nil {
-					log.Printf("WORKER-%d:RandomDate: Failed drawing WeightedChoice for year\n", wID)
-					log.Print(err)
-					ret <- chanReturn{ok: false, message: err.Error()}
-				}
-				year, ok := yearChoice.Item.(int)
-				if !ok {
-					log.Printf("WORKER-%d:RandomDate: Failed converting year to integer\n", wID)
-					ret <- chanReturn{ok: false, message: err.Error()}
-				}
-
-				monthChoice, err := randutil.WeightedChoice(months)
-				if err != nil {
-					log.Printf("WORKER-%d:RandomDate: Failed drawing WeightedChoice for month\n", wID)
-					log.Print(err)
-					ret <- chanReturn{ok: false, message: err.Error()}
-				}
-
-				month, ok := monthChoice.Item.(string)
-				if !ok {
-					log.Printf("WORKER-%d:RandomDate: Failed converting month to integer\n", wID)
-					ret <- chanReturn{ok: false, message: err.Error()}
-				}
-
-				t, err := time.Parse(shortForm, fmt.Sprintf("%d-%s-01", year, month))
-				if err != nil {
-					log.Printf("WORKER-%d:RandomDate: failed to parse date\n", wID)
-					ret <- chanReturn{ok: false, message: err.Error()}
-				}
-				date <- t
+		if len(date) < cap(date) {
+			yearChoice, err := randutil.WeightedChoice(years)
+			if err != nil {
+				log.Printf("RandomDate: Failed drawing WeightedChoice for year\n")
+				log.Print(err)
+				ret <- chanReturn{ok: false, message: err.Error()}
 			}
+			year, ok := yearChoice.Item.(int)
+			if !ok {
+				log.Printf("RandomDate: Failed converting year to integer\n")
+				ret <- chanReturn{ok: false, message: err.Error()}
+			}
+
+			monthChoice, err := randutil.WeightedChoice(months)
+			if err != nil {
+				log.Printf("RandomDate: Failed drawing WeightedChoice for month\n")
+				log.Print(err)
+				ret <- chanReturn{ok: false, message: err.Error()}
+			}
+
+			month, ok := monthChoice.Item.(string)
+			if !ok {
+				log.Printf("RandomDate: Failed converting month to integer\n")
+				ret <- chanReturn{ok: false, message: err.Error()}
+			}
+
+			t, err := time.Parse(shortForm, fmt.Sprintf("%d-%s-01", year, month))
+			if err != nil {
+				log.Printf("RandomDate: failed to parse date\n")
+				ret <- chanReturn{ok: false, message: err.Error()}
+			}
+			date <- t
+
 		}
 	}
 }

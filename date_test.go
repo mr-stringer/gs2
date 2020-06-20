@@ -78,11 +78,9 @@ func TestGetMonths(t *testing.T) {
 
 func TestRandomDate(t *testing.T) {
 	type args struct {
-		c       configuration
-		date    chan time.Time
-		request chan bool
-		ret     chan chanReturn
-		wID     int
+		c    configuration
+		date chan time.Time
+		ret  chan chanReturn
 	}
 	tests := []struct {
 		name string
@@ -90,11 +88,11 @@ func TestRandomDate(t *testing.T) {
 	}{
 		/*Only need to set the start and end years in the configuration*/
 		/*Also, do not need to test badly set years as these are weeded out in validation of the config */
-		{"Good 01", args{configuration{StartYear: 2010, EndYear: 2015}, make(chan time.Time, 10), make(chan bool), make(chan chanReturn), 0}},
-		{"Good 02", args{configuration{StartYear: 2012, EndYear: 2012}, make(chan time.Time, 10), make(chan bool), make(chan chanReturn), 0}},
-		{"Good 03", args{configuration{StartYear: 1990, EndYear: 1990}, make(chan time.Time, 10), make(chan bool), make(chan chanReturn), 0}},
-		{"Good 04", args{configuration{StartYear: 1066, EndYear: 1100}, make(chan time.Time, 10), make(chan bool), make(chan chanReturn), 0}},
-		{"Good 05", args{configuration{StartYear: 1001, EndYear: 2888}, make(chan time.Time, 10), make(chan bool), make(chan chanReturn), 0}},
+		{"Good 01", args{configuration{StartYear: 2010, EndYear: 2015}, make(chan time.Time, 10), make(chan chanReturn)}},
+		{"Good 02", args{configuration{StartYear: 2012, EndYear: 2012}, make(chan time.Time, 10), make(chan chanReturn)}},
+		{"Good 03", args{configuration{StartYear: 1990, EndYear: 1990}, make(chan time.Time, 10), make(chan chanReturn)}},
+		{"Good 04", args{configuration{StartYear: 1066, EndYear: 1100}, make(chan time.Time, 10), make(chan chanReturn)}},
+		{"Good 05", args{configuration{StartYear: 1001, EndYear: 2888}, make(chan time.Time, 10), make(chan chanReturn)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -110,7 +108,7 @@ func TestRandomDate(t *testing.T) {
 			start = start.Add(-time.Second)
 			end = end.Add(time.Hour * 24)
 
-			go RandomDate(tt.args.c, tt.args.date, tt.args.request, tt.args.ret, tt.args.wID)
+			go RandomDate(tt.args.c, tt.args.date, tt.args.ret)
 			for i := 0; i < 100; i++ {
 				tm := <-tt.args.date
 				if tm.Before(start) || tm.After(end) {
