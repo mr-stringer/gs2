@@ -54,9 +54,9 @@ func Test_configuration_verifyConfig(t *testing.T) {
 		{"Start and End years incorrectly set", configuration{Hostname: "theserver.foxy.com", Port: "30040", Username: "User", Password: "Still_a_BadPassword", Schema: "GtrShop", DropSchema: false, Workers: 64, Customers: 25000, Orders: 800000000, StartYear: 2021, EndYear: 1999}, true},
 		{"System user configuration 01", configuration{Hostname: "localhost", Port: "30015", Username: "system", Password: "QuietBadPassword", Schema: "GS", DropSchema: true, Workers: 10, Customers: 1000, Orders: 1000000, StartYear: 2010, EndYear: 2015}, true},
 		{"System user configuration 02", configuration{Hostname: "gshdb001", Port: "30040", Username: "SYSTEM", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 2010, EndYear: 2025}, true},
-		{"Start year too low", configuration{Hostname: "gshdb001", Port: "30040", Username: "SYSTEM", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 900, EndYear: 2025}, true},
-		{"End year too high", configuration{Hostname: "gshdb001", Port: "30040", Username: "SYSTEM", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 1980, EndYear: 5000}, true},
-		{"Start year too low and end year too high", configuration{Hostname: "gshdb001", Port: "30040", Username: "SYSTEM", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 10, EndYear: 6667}, true},
+		{"Start year too low", configuration{Hostname: "gshdb001", Port: "30040", Username: "Alan", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 900, EndYear: 2025}, true},
+		{"End year too high", configuration{Hostname: "gshdb001", Port: "30040", Username: "Susan", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 1980, EndYear: 5000}, true},
+		{"Start year too low and end year too high", configuration{Hostname: "gshdb001", Port: "30040", Username: "_44_4", Password: "%gre456yh(((76!", Schema: "PLAY", DropSchema: true, Workers: 128, Customers: 99999, Orders: 4500000, StartYear: 10, EndYear: 6667}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -77,6 +77,10 @@ func main() {
 	/*Create the return channel*/
 	retchan := make(chan chanReturn)
 
+	/*Create the payload chan and start the routine*/
+	pl := make(chan InsertPayload, c.Workers)
+	go db.CreatePayload(c, pl)
+
 	InsStart := time.Now()
 	/*Insert customers*/
 	log.Printf("Spawning %d workers to create %d orders\n", c.Workers, c.Orders)
@@ -84,9 +88,9 @@ func main() {
 
 	for i := 0; i < c.Workers; i++ {
 		if i == 0 {
-			go db.PlaceOrders(c, first, i, retchan)
+			go db.PlaceOrders(c, first, i, retchan, pl)
 		} else {
-			go db.PlaceOrders(c, rest, i, retchan)
+			go db.PlaceOrders(c, rest, i, retchan, pl)
 		}
 	}
 

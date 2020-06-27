@@ -19,6 +19,13 @@ type gsConn struct {
 	Connected bool /*defaults to false which is what I want :) */
 }
 
+//InsertPayload provides the data required to insert an order
+type InsertPayload struct {
+	CustomerID int
+	ProductID  int
+	Date       time.Time
+}
+
 // Creates a connection to the database thus populating the Conn struct.
 func (g *gsConn) Init(c configuration) error {
 	log.Print("Initalising connection")
@@ -390,33 +397,27 @@ func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
 
 }
 
-//PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run
-//It takes a number of arguments.
-//configuration is the gs2 configuration struct
-//count is the total number of orders for this instance to insert
-//wid is the worker id, this should be unique
-//errchan is a channel where the main process can check for any errors being sent back.
-//A transaction size of 10,000 records is currently in place, this will be made variable in the future
-func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- chanReturn) {
-	log.Printf("WORKER-%d: Getting Product IDs", wid)
+//CreatePayload is a function that runs as a goroutines and creates the random data for the customer inserts
+func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
+	log.Printf("CreatePayload: Getting Product IDs\n")
 	prodIDs, err := g.GetProductIDs(c.Schema)
 	if err != nil {
-		log.Printf("WORKER-%d: failed to get product IDs", wid)
-		log.Printf("WORKER-%d: will now quit and notify main", wid)
-		retchan <- chanReturn{ok: false, message: fmt.Sprintf("WORKER-%d: fails to get product IDs", wid)}
-		return
+		log.Printf("CreatePayload: failed to get product IDs\n")
+		log.Printf("CreatePayload: will now quit and not clean up\n")
+		/*ugly quit*/
+		os.Exit(-1)
 	}
 
-	log.Printf("WORKER-%d: Customer Product IDs", wid)
+	log.Printf("CreatePayload: Customer Product IDs\n")
 	CustIDs, err := g.GetCustomerIDs(c.Schema)
 	if err != nil {
-		log.Printf("WORKER-%d: failed to get customer IDs", wid)
-		log.Printf("WORKER-%d: will now quit and notify main", wid)
-		retchan <- chanReturn{ok: false, message: fmt.Sprintf("WORKER-%d: fails to get customer IDs", wid)}
-		return
+		log.Printf("CreatePayload: failed to get customer IDs\n")
+		log.Printf("CreatePayload: will now quit and not clean up\n")
+		/*ugly quit*/
+		os.Exit(-1)
 	}
 
-	log.Printf("WORKER-%d: Making Channels", wid)
+	log.Printf("CreatePayload: Making Channels")
 	/*Make channels for random products*/
 	rndProd := make(chan int, 10)
 	rndProdquit := make(chan bool)
@@ -427,28 +428,34 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 
 	/*Make channels for random dates*/
 	rndDate := make(chan time.Time, 10)
-	rndDatequit := make(chan bool)
 	rndDateRet := make(chan chanReturn)
 
-	log.Printf("WORKER-%d: Stating goroutines", wid)
-	go RandomProductID(prodIDs, rndProd, rndProdquit, wid)
-	go RandomCustomerID(CustIDs, rndCust, rndCustquit, wid)
-	go RandomDate(c, rndDate, rndDatequit, rndDateRet, wid)
+	log.Printf("CreatePayload: Stating goroutines")
+	go RandomProductID(prodIDs, rndProd, rndProdquit)
+	go RandomCustomerID(CustIDs, rndCust, rndCustquit)
+	go RandomDate(c, rndDate, rndDateRet)
 
+	for { /*forever*/
+		if len(plChan) < cap(plChan) {
+			plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
+		}
+	}
+}
+
+//PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run
+//It takes a number of arguments.
+//configuration is the gs2 configuration struct
+//count is the total number of orders for this instance to insert
+//wid is the worker id, this should be unique
+//errchan is a channel where the main process can check for any errors being sent back.
+//A transaction size of 10,000 records is currently in place, this will be made variable in the future
+func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
 	/*Loop until we run out of things to do*/
 	var loopMax int = 10000
-
+	var done int = 0
 	log.Printf("WORKER-%d: Entering outer loop", wid)
 	for remaining := count; remaining > 0; {
 		log.Printf("WORKER-%d: %d remaining", wid, remaining)
-
-		/*Check all of the return channels for errors*/
-		//select {
-		//case ret := <-rndDateRet:
-		//	if !ret.ok {
-		//		log.Printf("WORKER-%d: failed to start transaction", wid)
-		//	}
-		//}
 
 		var loop int
 		if remaining > loopMax {
@@ -476,9 +483,10 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 		}
 
 		for i := 0; i < loop; i++ {
+			pl := <-payloadChan
 			/*start transacting*/
 
-			_, err = stmt.Exec(<-rndCust, <-rndProd, <-rndDate)
+			_, err = stmt.Exec(pl.CustomerID, pl.ProductID, pl.Date)
 			if err != nil {
 				log.Printf("WORKER-%d: failed to execute statement, will attempt rollback", wid)
 				rberr := trnx.Rollback()
@@ -511,9 +519,9 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			retchan <- chanReturn{ok: false, message: err.Error()}
 			return
 		}
-
+		done += loop
 		remaining = remaining - loop
-		log.Printf("WORKER-%d: Committed %.2f%% of orders", wid, (float32(count) / (float32(remaining)) * 100))
+		log.Printf("WORKER-%d: Committed %.2f%% of orders", wid, float32(done)/float32(count)*100)
 
 	}
 	retchan <- chanReturn{ok: true, message: fmt.Sprintf("WORKER-%d: Completed all orders", wid)}
