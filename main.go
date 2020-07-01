@@ -14,7 +14,7 @@ func main() {
 
 	/*Read in the config*/
 	c := configuration{}
-	err := c.getConfig("gs.json")
+	err := c.getConfig("gs2.json")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -118,4 +118,5 @@ func main() {
 	log.Printf("========================\n")
 	log.Printf("Orders took %.2f seconds\n", InsEnd.Sub(InsStart).Seconds())
 	log.Printf("Total time %.2f seconds\n", End.Sub(start).Seconds())
+	os.Exit(0)
 }
