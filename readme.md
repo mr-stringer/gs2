@@ -2,7 +2,13 @@
 
 gs2 (guitar shop 2) is tool that creates a testing workload for the SAP HANA database.  gs2 simulates intensive writes to a very simple normalised OLTP schema for a fictional guitar shop.
 
-gs2 is written in go and therefore is statically compiled and requires virtually no dependacies, making it perfect for quick testing.
+gs2 can be used to help with:
+
+* Benchmarking performance
+* Stress testing
+* Understanding and validating HANA configuration changes and tuning
+
+gs2 is written in go and therefore is statically compiled and requires virtually no dependacies, making it highly portable and  perfect for quick testing.
 
 **Warning - gs2 can delete data inside your HANA database!**
 
@@ -113,8 +119,15 @@ Below is an example configuration file which is correctly formatted
     "EndYear":2020
 }
 ```
+
 With a valid configuration file in place, gs2 can be launched from the command line.
 
 ## Output
 
 gs2 is very chatty and will produce a lot of output to screen.  Any problems found should be printed to screen too in (hopefully) plain English.
+
+## Hints and Tips
+
+Tune the configuration file for best performance.  Start with a low number of workers, customers and orders.  A resonable starting point would be 8 workers, 1000 customers and 100,000 orders.
+
+Performance may be constrianed by either gs2 (high CPU use on the gs2 host), the HANA database (high CPU or disk throuhput on the DB host) or even network saturation.  Use the system monitoring tools at your disposal to help figure out the bottleneck.
