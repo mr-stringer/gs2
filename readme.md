@@ -12,9 +12,7 @@ gs2 is written in go and therefore is statically compiled and requires virtually
 
 **Warning - gs2 can delete data inside your HANA database!**
 
-Before using gs2, make sure you understand what it will do.  A certain combination of configuration parameters could delete your data.  Carefully read the configuration section before running! 
-
-**Use gs2 at your own risk**
+Before using gs2, make sure you understand what it will do.  A certain combination of configuration parameters could delete your data.  Carefully read the configuration section before running!
 
 ## What gs2 does
 
@@ -34,7 +32,7 @@ One of the goals of gs2 was to generate data that looks like normal data.  Over 
 
 ## Testing and Compiling
 
-To compile gs2, you'll need a working golang environemnt.  For details of setting this up see https://golang.org/doc/install
+To compile gs2, you'll need a working golang environemnt.  For details of setting this up see <https://golang.org/doc/install>
 
 You can run the test-suite by issuing the command
 
