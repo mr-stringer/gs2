@@ -419,15 +419,15 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 
 	log.Printf("CreatePayload: Making Channels")
 	/*Make channels for random products*/
-	rndProd := make(chan int, 10)
+	rndProd := make(chan int, c.Workers*2) /*bueffered channel length = workers*2*/
 	rndProdquit := make(chan bool)
 
 	/*Make channels for random customers*/
-	rndCust := make(chan int, 10)
+	rndCust := make(chan int, c.Workers*2) /*bueffered channel length = workers*2*/
 	rndCustquit := make(chan bool)
 
 	/*Make channels for random dates*/
-	rndDate := make(chan time.Time, 10)
+	rndDate := make(chan time.Time, c.Workers*2) /*bueffered channel length = workers*2*/
 	rndDateRet := make(chan chanReturn)
 
 	log.Printf("CreatePayload: Stating goroutines")
