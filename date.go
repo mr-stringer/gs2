@@ -64,39 +64,38 @@ func RandomDate(c configuration, date chan<- time.Time, ret chan<- chanReturn) {
 
 	/*loop until told otherwise*/
 	for {
-		if len(date) < cap(date) {
-			yearChoice, err := randutil.WeightedChoice(years)
-			if err != nil {
-				log.Printf("RandomDate: Failed drawing WeightedChoice for year\n")
-				log.Print(err)
-				ret <- chanReturn{ok: false, message: err.Error()}
-			}
-			year, ok := yearChoice.Item.(int)
-			if !ok {
-				log.Printf("RandomDate: Failed converting year to integer\n")
-				ret <- chanReturn{ok: false, message: err.Error()}
-			}
+		/*Just stick a value in the pipe and block if it is full*/
 
-			monthChoice, err := randutil.WeightedChoice(months)
-			if err != nil {
-				log.Printf("RandomDate: Failed drawing WeightedChoice for month\n")
-				log.Print(err)
-				ret <- chanReturn{ok: false, message: err.Error()}
-			}
-
-			month, ok := monthChoice.Item.(string)
-			if !ok {
-				log.Printf("RandomDate: Failed converting month to integer\n")
-				ret <- chanReturn{ok: false, message: err.Error()}
-			}
-
-			t, err := time.Parse(shortForm, fmt.Sprintf("%d-%s-01", year, month))
-			if err != nil {
-				log.Printf("RandomDate: failed to parse date\n")
-				ret <- chanReturn{ok: false, message: err.Error()}
-			}
-			date <- t
-
+		yearChoice, err := randutil.WeightedChoice(years)
+		if err != nil {
+			log.Printf("RandomDate: Failed drawing WeightedChoice for year\n")
+			log.Print(err)
+			ret <- chanReturn{ok: false, message: err.Error()}
 		}
+		year, ok := yearChoice.Item.(int)
+		if !ok {
+			log.Printf("RandomDate: Failed converting year to integer\n")
+			ret <- chanReturn{ok: false, message: err.Error()}
+		}
+
+		monthChoice, err := randutil.WeightedChoice(months)
+		if err != nil {
+			log.Printf("RandomDate: Failed drawing WeightedChoice for month\n")
+			log.Print(err)
+			ret <- chanReturn{ok: false, message: err.Error()}
+		}
+
+		month, ok := monthChoice.Item.(string)
+		if !ok {
+			log.Printf("RandomDate: Failed converting month to integer\n")
+			ret <- chanReturn{ok: false, message: err.Error()}
+		}
+
+		t, err := time.Parse(shortForm, fmt.Sprintf("%d-%s-01", year, month))
+		if err != nil {
+			log.Printf("RandomDate: failed to parse date\n")
+			ret <- chanReturn{ok: false, message: err.Error()}
+		}
+		date <- t
 	}
 }
