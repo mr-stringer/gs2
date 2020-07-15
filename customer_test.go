@@ -7,14 +7,14 @@ import (
 
 func TestRandomSal(t *testing.T) {
 	type args struct {
-		request chan bool
-		sal     chan string
+		count int
+		sal   chan string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good 01", args{make(chan bool), make(chan string)}},
+		{"Good 01", args{100, make(chan string)}},
 	}
 
 	/*Get the expected outcomes*/
@@ -22,9 +22,8 @@ func TestRandomSal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomSal(tt.args.request, tt.args.sal)
+			go RandomSal(tt.args.count, tt.args.sal)
 			for i := 0; i < 100; i++ {
-				tt.args.request <- true
 				res := <-tt.args.sal
 
 				found := bool(false)
@@ -41,21 +40,19 @@ func TestRandomSal(t *testing.T) {
 				}
 			}
 		})
-		close(tt.args.request)
-		close(tt.args.sal)
 	}
 }
 
 func TestRandomFirstIntial(t *testing.T) {
 	type args struct {
-		request chan bool
-		fint    chan string
+		count int
+		fint  chan string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good 01", args{make(chan bool), make(chan string)}},
+		{"Good 01", args{100, make(chan string)}},
 	}
 
 	/*Get the expected outcomes*/
@@ -63,9 +60,8 @@ func TestRandomFirstIntial(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomFirstIntial(tt.args.request, tt.args.fint)
+			go RandomFirstIntial(tt.args.count, tt.args.fint)
 			for i := 0; i < 100; i++ {
-				tt.args.request <- true
 				res := <-tt.args.fint
 
 				found := bool(false)
@@ -82,21 +78,19 @@ func TestRandomFirstIntial(t *testing.T) {
 				}
 			}
 		})
-		close(tt.args.request)
-		close(tt.args.fint)
 	}
 }
 
 func TestRandomSurname(t *testing.T) {
 	type args struct {
-		request chan bool
+		count   int
 		surname chan string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good 01", args{make(chan bool), make(chan string)}},
+		{"Good 01", args{100, make(chan string)}},
 	}
 
 	/*Get the expected outcomes*/
@@ -104,9 +98,8 @@ func TestRandomSurname(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomSurname(tt.args.request, tt.args.surname)
+			go RandomSurname(tt.args.count, tt.args.surname)
 			for i := 0; i < 100; i++ {
-				tt.args.request <- true
 				res := <-tt.args.surname
 
 				found := bool(false)
@@ -123,21 +116,19 @@ func TestRandomSurname(t *testing.T) {
 				}
 			}
 		})
-		close(tt.args.request)
-		close(tt.args.surname)
 	}
 }
 
 func TestRandomStreetName(t *testing.T) {
 	type args struct {
-		request    chan bool
+		count      int
 		streetName chan string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good 01", args{make(chan bool), make(chan string)}},
+		{"Good 01", args{100, make(chan string)}},
 	}
 
 	/*Get the expected outcomes*/
@@ -145,9 +136,8 @@ func TestRandomStreetName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomStreetName(tt.args.request, tt.args.streetName)
+			go RandomStreetName(tt.args.count, tt.args.streetName)
 			for i := 0; i < 100; i++ {
-				tt.args.request <- true
 				res := <-tt.args.streetName
 
 				found := bool(false)
@@ -164,21 +154,19 @@ func TestRandomStreetName(t *testing.T) {
 				}
 			}
 		})
-		close(tt.args.request)
-		close(tt.args.streetName)
 	}
 }
 
 func TestRandomTowntName(t *testing.T) {
 	type args struct {
-		request  chan bool
+		count    int
 		townName chan string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good 01", args{make(chan bool), make(chan string)}},
+		{"Good 01", args{100, make(chan string)}},
 	}
 
 	/*Get the expected outcomes*/
@@ -186,9 +174,8 @@ func TestRandomTowntName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomTownName(tt.args.request, tt.args.townName)
-			for i := 0; i < 100; i++ {
-				tt.args.request <- true
+			go RandomTownName(tt.args.count, tt.args.townName)
+			for i := 0; i < tt.args.count; i++ {
 				res := <-tt.args.townName
 
 				found := bool(false)
@@ -205,21 +192,19 @@ func TestRandomTowntName(t *testing.T) {
 				}
 			}
 		})
-		close(tt.args.request)
-		close(tt.args.townName)
 	}
 }
 
 func TestRandomDiscount(t *testing.T) {
 	type args struct {
-		request  chan bool
+		count    int
 		discount chan int
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good 01", args{make(chan bool), make(chan int)}},
+		{"Good 01", args{100, make(chan int)}},
 	}
 
 	/*Get the expected outcomes*/
@@ -227,9 +212,8 @@ func TestRandomDiscount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomDiscount(tt.args.request, tt.args.discount)
-			for i := 0; i < 100; i++ {
-				tt.args.request <- true
+			go RandomDiscount(tt.args.count, tt.args.discount)
+			for i := 0; i < tt.args.count; i++ {
 				res := <-tt.args.discount
 
 				found := bool(false)
@@ -246,28 +230,26 @@ func TestRandomDiscount(t *testing.T) {
 				}
 			}
 		})
-		close(tt.args.request)
-		close(tt.args.discount)
+
 	}
 }
 
 func TestRandomStreetNumber(t *testing.T) {
 	type args struct {
-		request   chan bool
+		count     int
 		streetNum chan int
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"Good", args{make(chan bool), make(chan int)}},
+		{"Good", args{100, make(chan int)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go RandomStreetNumber(tt.args.request, tt.args.streetNum)
+			go RandomStreetNumber(tt.args.count, tt.args.streetNum)
 
-			for i := 0; i < 100; i++ {
-				tt.args.request <- true
+			for i := 0; i < tt.args.count; i++ {
 				res := <-tt.args.streetNum
 				if res <= 0 || res >= 701 {
 					t.Errorf("TestRandomStreetNumber expect output to be between 1 and 700 but got %d\n", res)

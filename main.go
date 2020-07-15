@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	/*RESTORED*/
 	/*let us begin*/
 	start := time.Now()
 	log.Printf("gs2 is initialising")
