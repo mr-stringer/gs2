@@ -112,6 +112,8 @@ func main() {
 	InsEnd := time.Now()
 	End := time.Now()
 
+	close(pl)
+
 	log.Printf("========================\n")
 	log.Printf("Workers completed: %d\n", ok)
 	log.Printf("Workers failed:    %d\n", failed)

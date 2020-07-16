@@ -385,11 +385,10 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	go RandomCustomerID(c.Orders, CustIDs, rndCust)
 	go RandomDate(c, rndDate)
 
-	for { /*forever*/
-		if len(plChan) < cap(plChan) {
-			plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
-		}
+	for i := 0; i < c.Orders; i++ {
+		plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
 	}
+	return
 }
 
 //PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run
@@ -439,6 +438,7 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			_, err = stmt.Exec(pl.CustomerID, pl.ProductID, pl.Date)
 			if err != nil {
 				log.Printf("WORKER-%d: failed to execute statement, will attempt rollback", wid)
+				log.Printf("WORKER-%d: Statement arguments were CustomerID:%d, ProductID:%d, Date:%s", wid, pl.CustomerID, pl.ProductID, pl.Date.String())
 				rberr := trnx.Rollback()
 				if rberr != nil {
 					log.Printf("WORKER-%d: rollback failed!!!", wid)
