@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	/*RESTORED*/
 	/*let us begin*/
 	start := time.Now()
 	log.Printf("gs2 is initialising")
@@ -112,6 +111,8 @@ func main() {
 	}
 	InsEnd := time.Now()
 	End := time.Now()
+
+	close(pl)
 
 	log.Printf("========================\n")
 	log.Printf("Workers completed: %d\n", ok)

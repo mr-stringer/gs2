@@ -226,60 +226,25 @@ func (g gsConn) WorkerInsertCustomers(wid, count int, schema string, wg *sync.Wa
 	}
 
 	/*make the channels for the random functions*/
-	/*salutations*/
-	salreq := make(chan bool)
 	sal := make(chan string)
-	defer close(salreq)
-
-	/*first initials*/
-	fintreq := make(chan bool)
 	fint := make(chan string)
-	defer close(fintreq)
-
-	/*surnames*/
-	surnamereq := make(chan bool)
 	surname := make(chan string)
-	defer close(surnamereq)
-
-	/*street number*/
-	streetnumreq := make(chan bool)
 	streetnum := make(chan int)
-	defer close(streetnumreq)
-
-	/*street name*/
-	streetnamereq := make(chan bool)
 	streetname := make(chan string)
-	defer close(streetnamereq)
-
-	/*town name*/
-	townnamereq := make(chan bool)
 	townname := make(chan string)
-	defer close(townnamereq)
-
-	/*discount*/
-	discoreq := make(chan bool)
 	disco := make(chan int)
-	defer close(discoreq)
 
 	/*fire off the go routines*/
-	go RandomSal(salreq, sal)
-	go RandomFirstIntial(fintreq, fint)
-	go RandomSurname(surnamereq, surname)
-	go RandomStreetNumber(streetnumreq, streetnum)
-	go RandomStreetName(streetnamereq, streetname)
-	go RandomTownName(townnamereq, townname)
-	go RandomDiscount(discoreq, disco)
+	go RandomSal(count, sal)
+	go RandomFirstIntial(count, fint)
+	go RandomSurname(count, surname)
+	go RandomStreetNumber(count, streetnum)
+	go RandomStreetName(count, streetname)
+	go RandomTownName(count, townname)
+	go RandomDiscount(count, disco)
 
 	/*loops for the value giving in 'count'.  It starts by requesting random data and then inserts it.*/
 	for i := 0; i < count; i++ {
-		salreq <- true
-		fintreq <- true
-		surnamereq <- true
-		streetnumreq <- true
-		streetnamereq <- true
-		townnamereq <- true
-		discoreq <- true
-
 		stmt1 := fmt.Sprintf("INSERT INTO \"%s\".\"CUSTOMERS\" (SAL, FNAME, LNAME, ADDR1, CITY, DISCOUNT_PCT) VALUES ('%s', '%s', '%s', '%d %s', '%s', '%d');", schema, <-sal, <-fint, <-surname, <-streetnum, <-streetname, <-townname, <-disco)
 
 		_, execError = trnx.Exec(stmt1)
@@ -289,19 +254,7 @@ func (g gsConn) WorkerInsertCustomers(wid, count int, schema string, wg *sync.Wa
 		}
 	}
 
-	/*end go routines (which also closes their sender channels*/
-	salreq <- false
-	fintreq <- false
-	surnamereq <- false
-	streetnumreq <- false
-	streetnamereq <- false
-	townnamereq <- false
-	discoreq <- false
-
-	/*close sender channels, the functions close their sender channels*/
-
-	/*now deal with the DB state*/
-
+	/*Deal with the DB state*/
 	if execError != nil {
 		log.Printf("WORKER-%d: An insert failed, attempting rollback", wid)
 		log.Print(execError)
@@ -420,26 +373,22 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	log.Printf("CreatePayload: Making Channels")
 	/*Make channels for random products*/
 	rndProd := make(chan int, c.Workers*2) /*bueffered channel length = workers*2*/
-	rndProdquit := make(chan bool)
 
 	/*Make channels for random customers*/
 	rndCust := make(chan int, c.Workers*2) /*bueffered channel length = workers*2*/
-	rndCustquit := make(chan bool)
 
 	/*Make channels for random dates*/
 	rndDate := make(chan time.Time, c.Workers*2) /*bueffered channel length = workers*2*/
-	rndDateRet := make(chan chanReturn)
 
 	log.Printf("CreatePayload: Stating goroutines")
-	go RandomProductID(prodIDs, rndProd, rndProdquit)
-	go RandomCustomerID(CustIDs, rndCust, rndCustquit)
-	go RandomDate(c, rndDate, rndDateRet)
+	go RandomProductID(c.Orders, prodIDs, rndProd)
+	go RandomCustomerID(c.Orders, CustIDs, rndCust)
+	go RandomDate(c, rndDate)
 
-	for { /*forever*/
-		if len(plChan) < cap(plChan) {
-			plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
-		}
+	for i := 0; i < c.Orders; i++ {
+		plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
 	}
+	return
 }
 
 //PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run
@@ -489,6 +438,7 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			_, err = stmt.Exec(pl.CustomerID, pl.ProductID, pl.Date)
 			if err != nil {
 				log.Printf("WORKER-%d: failed to execute statement, will attempt rollback", wid)
+				log.Printf("WORKER-%d: Statement arguments were CustomerID:%d, ProductID:%d, Date:%s", wid, pl.CustomerID, pl.ProductID, pl.Date.String())
 				rberr := trnx.Rollback()
 				if rberr != nil {
 					log.Printf("WORKER-%d: rollback failed!!!", wid)
