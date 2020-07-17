@@ -194,7 +194,7 @@ func (g gsConn) TransactExecRows(statements []string) error {
 			log.Printf("Failed to rollback transaction - database could be inconsistent\n")
 			return err
 		}
-		fmt.Printf("Sucessfully rolledback the failed transaction\n")
+		log.Printf("Sucessfully rolledback the failed transaction\n")
 		return trnxError
 	}
 
