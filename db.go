@@ -400,7 +400,7 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 //A transaction size of 10,000 records is currently in place, this will be made variable in the future
 func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
 	/*Loop until we run out of things to do*/
-	var loopMax int = 10000
+	var loopMax int = c.TrnxRecords
 	var done int = 0
 	log.Printf("WORKER-%d: Entering outer loop", wid)
 	for remaining := count; remaining > 0; {

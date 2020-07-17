@@ -11,15 +11,16 @@ import (
 )
 
 type configuration struct {
-	Hostname   string
-	Port       string
-	Username   string
-	Password   string
-	Schema     string
-	DropSchema bool
-	Workers    int
-	Customers  int
-	Orders     int
+	Hostname    string
+	Port        string
+	Username    string
+	Password    string
+	Schema      string
+	DropSchema  bool
+	Workers     int
+	Customers   int
+	Orders      int
+	TrnxRecords int
 	//InsertMode string Insert mode is no longer required.  Will always run using transactions
 	StartYear int
 	EndYear   int
@@ -56,9 +57,9 @@ func (c *configuration) getConfig(cfile string) error {
 
 // verifyConfig checks that all required fields are correctly populated
 // The only exception is DropSchema, if this is not set it defaults to `false`, which is the safe option
-func (c configuration) verifyConfig() error {
+func (c *configuration) verifyConfig() error {
 	/*Use reflection to get the values of the fields to ensure that each field is populated with something.*/
-	v := reflect.ValueOf(c)
+	v := reflect.ValueOf(*c)
 	typeOfS := v.Type()
 
 	var flagError = false
@@ -67,6 +68,10 @@ func (c configuration) verifyConfig() error {
 		/*cast everthing to a string to test values*/
 		s1 := fmt.Sprintf("%v", v.Field(i).Interface())
 		if s1 == "" || s1 == "0" {
+			/*Exclude TrnxRecords*/
+			if typeOfS.Field(i).Name == "TrnxRecords" {
+				continue
+			}
 			log.Printf("Field: %s has no value set\n", typeOfS.Field(i).Name)
 			flagError = true
 		}
@@ -100,6 +105,17 @@ func (c configuration) verifyConfig() error {
 	if c.StartYear < 1001 || c.EndYear > 2999 {
 		log.Printf("verifyConfig: Start Year must be 1001 or greater and End Year can be no greater than 2999")
 		return errors.New("Date range not accepted")
+	}
+
+	/*If TrnxRecords is not set, set it to 10,000*/
+	if c.TrnxRecords == 0 {
+		c.TrnxRecords = 10000
+	}
+
+	/*Trnx must be between 100 and 10,000,000 check that it is*/
+	if c.TrnxRecords > 10000000 || c.TrnxRecords < 100 {
+		log.Printf("verifyConfig: TrnxRecords must cannot be lower than 100 or higher than 10,000,000")
+		return errors.New("TrnxRecords not accepted")
 	}
 
 	return nil
