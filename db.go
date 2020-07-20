@@ -385,9 +385,18 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	go RandomCustomerID(c.Orders, CustIDs, rndCust)
 	go RandomDate(c, rndDate)
 
+	log.Printf("CreatePayload: Started producing payloads\n")
+
 	for i := 0; i < c.Orders; i++ {
+		/*progress update to be generated every 100,000 payloads*/
+
+		if i%c.TrnxRecords == 0 {
+			log.Printf("CreatePayload: %d of %d payloads created (%.2f%%)\n", i, c.Orders, float32(i)/float32(c.Orders)*100)
+		}
+
 		plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
 	}
+	close(plChan)
 	return
 }
 
@@ -400,19 +409,15 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 //A transaction size of 10,000 records is currently in place, this will be made variable in the future
 func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
 	/*Loop until we run out of things to do*/
-	var loopMax int = c.TrnxRecords
-	var done int = 0
-	log.Printf("WORKER-%d: Entering outer loop", wid)
-	for remaining := count; remaining > 0; {
-		log.Printf("WORKER-%d: %d remaining", wid, remaining)
+	var max int = c.TrnxRecords
+	var loop int = 0
+	var all int = 0
+	var quit bool = false
 
-		var loop int
-		if remaining > loopMax {
-			loop = loopMax
-		} else {
-			loop = remaining
-		}
-		log.Printf("WORKER-%d: Attempting to start transaction of %d orders", wid, loop)
+	for { //forever
+		//log.Printf("WORKER-%d: %d remaining", wid, remaining)
+
+		log.Printf("WORKER-%d: Attempting to start transaction\n", wid)
 
 		trnx, err := g.Conn.Begin()
 		if err != nil {
@@ -431,9 +436,14 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			return
 		}
 
-		for i := 0; i < loop; i++ {
-			pl := <-payloadChan
-			/*start transacting*/
+		for i := 0; i < max; i++ {
+			pl, ok := <-payloadChan
+
+			/* if the channel is closed, break and commit */
+			if !ok {
+				quit = true
+				break
+			}
 
 			_, err = stmt.Exec(pl.CustomerID, pl.ProductID, pl.Date)
 			if err != nil {
@@ -451,6 +461,7 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 				retchan <- chanReturn{ok: false, message: err.Error()}
 				return
 			}
+			loop = i + 1
 		}
 		/*Close the statement*/
 		err = stmt.Close()
@@ -469,10 +480,13 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			retchan <- chanReturn{ok: false, message: err.Error()}
 			return
 		}
-		done += loop
-		remaining = remaining - loop
-		log.Printf("WORKER-%d: Committed %.2f%% of orders", wid, float32(done)/float32(count)*100)
+		log.Printf("WORKER-%d: Committed %d orders", wid, loop)
+		all = +loop
+
+		if quit {
+			break
+		}
 
 	}
-	retchan <- chanReturn{ok: true, message: fmt.Sprintf("WORKER-%d: Completed all orders", wid)}
+	retchan <- chanReturn{ok: true, message: fmt.Sprintf("WORKER-%d: Completed %d orders", wid, all)}
 }

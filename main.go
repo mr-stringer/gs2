@@ -112,7 +112,8 @@ func main() {
 	InsEnd := time.Now()
 	End := time.Now()
 
-	close(pl)
+	/*pl recivers now check for closed channel*/
+	/*close(pl)*/
 
 	log.Printf("========================\n")
 	log.Printf("Workers completed: %d\n", ok)
