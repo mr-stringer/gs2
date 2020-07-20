@@ -87,19 +87,20 @@ You should not run gs2 against the SYSTEMDB.  gs2 will not stop you doing this, 
 
 gs2 accepts no command line arguments and instead requires a JSON formatted configuration file named gs2.json to be present in the current working directory.  The configuration parameters are as follows:
 
-| Parameter  | Type    | Description  |
-|------------|---------|--------------|
-| Hostname   | String  | The hostname or IP address of the target HANA system.|
-| Port       | Integer | The SQL port of the target HANA DB.|
+| Parameter   | Type    | Description  |
+|-------------|---------|--------------|
+| Hostname    | String  | The hostname or IP address of the target HANA system.|
+| Port        | Integer | The SQL port of the target HANA DB.|
 | Username   | String  | The HANA username to be used on the target HANA system.|
-| Password   | String  | The password for the user.|
-| Schema     | String  | The schema to be used.|
-| DropSchema | Boolean | If set to `true`, gs2 will drop the target schema if it exists.  If set to `false`, gs2 will quit if the schema exists.  Only use `true` with caution.  If omitted, DropSchema will default to false.|
-| Workers    | Integer | The number of worker goroutines to spawn.|
-| Customers  | Integer | The number of customers to create.|
-| Orders     | Integer | The number of orders to create.|
-| StartYear  | Integer | The year that orders start, lowest accepatable value is 1001.|
-| EndYear    | Integer | The year that orders end, the highest acceptable value is 2999|
+| Password    | String  | The password for the user.|
+| Schema      | String  | The schema to be used.|
+| DropSchema  | Boolean | If set to `true`, gs2 will drop the target schema if it exists.  If set to `false`, gs2 will quit if the schema exists.  Only use `true` with caution.  If omitted, DropSchema will default to false.|
+| Workers     | Integer | The number of worker goroutines to spawn.|
+| Customers   | Integer | The number of customers to create.|
+| Orders      | Integer | The number of orders to create.|
+| TrnxRecords | Integer | Optional.  The number of records to be inserted in each transation.  Default is 10,000.  The lowest acceptable value is 100.  The highest acceptable is 10,000,000. |
+| StartYear   | Integer | The year that orders start, lowest accepatable value is 1001.|
+| EndYear     | Integer | The year that orders end, the highest acceptable value is 2999|
 
 Below is an example configuration file which is correctly formatted
 
