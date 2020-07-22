@@ -101,6 +101,7 @@ gs2 accepts no command line arguments and instead requires a JSON formatted conf
 | TrnxRecords | Integer | Optional.  The number of records to be inserted in each transation.  Default is 10,000.  The lowest acceptable value is 100.  The highest acceptable is 10,000,000. |
 | StartYear   | Integer | The year that orders start, lowest accepatable value is 1001.|
 | EndYear     | Integer | The year that orders end, the highest acceptable value is 2999|
+| Verbose     | Boolean | When set to `true`, gs2 will log the comitting of every transaction.  Verbose is set to `false` by default.|
 
 Below is an example configuration file which is correctly formatted
 
