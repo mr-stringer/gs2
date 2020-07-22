@@ -316,7 +316,6 @@ func (g gsConn) GetProductIDs(schema string) ([]randutil.Choice, error) {
 
 //GetCustomerIDs returns a slice of customer IDs which is used to randomise customers
 func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
-	log.Printf("GetCustomerIDs: Getting customers IDs from the database")
 	q1 := fmt.Sprintf("SELECT COUNT(ID) FROM \"%s\".\"CUSTOMERS\"", schema)
 	r := g.Conn.QueryRow(q1)
 	var count int
@@ -361,7 +360,7 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 		os.Exit(-1)
 	}
 
-	log.Printf("CreatePayload: Customer Product IDs\n")
+	log.Printf("CreatePayload: Getting Customer Product IDs\n")
 	CustIDs, err := g.GetCustomerIDs(c.Schema)
 	if err != nil {
 		log.Printf("CreatePayload: failed to get customer IDs\n")
@@ -370,7 +369,6 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 		os.Exit(-1)
 	}
 
-	log.Printf("CreatePayload: Making Channels")
 	/*Make channels for random products*/
 	rndProd := make(chan int, c.Workers*2) /*bueffered channel length = workers*2*/
 
@@ -380,7 +378,6 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	/*Make channels for random dates*/
 	rndDate := make(chan time.Time, c.Workers*2) /*bueffered channel length = workers*2*/
 
-	log.Printf("CreatePayload: Stating goroutines")
 	go RandomProductID(c.Orders, prodIDs, rndProd)
 	go RandomCustomerID(c.Orders, CustIDs, rndCust)
 	go RandomDate(c, rndDate)
@@ -417,7 +414,7 @@ func (g gsConn) PlaceOrders(c configuration, wid int, retchan chan<- chanReturn,
 	var all int = 0
 	var quit bool = false
 
-	log.Printf("WORKER-%d: Started", wid)
+	log.Printf("WORKER-%d: Running", wid)
 
 	for { //forever
 
