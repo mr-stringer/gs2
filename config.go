@@ -24,6 +24,7 @@ type configuration struct {
 	//InsertMode string Insert mode is no longer required.  Will always run using transactions
 	StartYear int
 	EndYear   int
+	Verbose   bool
 }
 
 // getConfig the specified configuration file and attempts to marshall it's content into the
@@ -69,7 +70,7 @@ func (c *configuration) verifyConfig() error {
 		s1 := fmt.Sprintf("%v", v.Field(i).Interface())
 		if s1 == "" || s1 == "0" {
 			/*Exclude TrnxRecords*/
-			if typeOfS.Field(i).Name == "TrnxRecords" {
+			if typeOfS.Field(i).Name == "TrnxRecords" || typeOfS.Field(i).Name == "Verbose" {
 				continue
 			}
 			log.Printf("Field: %s has no value set\n", typeOfS.Field(i).Name)

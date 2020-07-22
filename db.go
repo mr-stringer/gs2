@@ -387,10 +387,13 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 
 	log.Printf("CreatePayload: Started producing payloads\n")
 
-	for i := 0; i < c.Orders; i++ {
-		/*progress update to be generated every 100,000 payloads*/
+	/*figure out 5% of c.Orders and use that for percentage calculating*/
+	fvPct := float32(c.Orders) * 0.05
+	fvPctInt := int(fvPct)
 
-		if i%c.TrnxRecords == 0 {
+	for i := 0; i < c.Orders; i++ {
+
+		if i%fvPctInt == 0 && i != 0 {
 			log.Printf("CreatePayload: %d of %d payloads created (%.2f%%)\n", i, c.Orders, float32(i)/float32(c.Orders)*100)
 		}
 
@@ -407,7 +410,7 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 //wid is the worker id, this should be unique
 //errchan is a channel where the main process can check for any errors being sent back.
 //A transaction size of 10,000 records is currently in place, this will be made variable in the future
-func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
+func (g gsConn) PlaceOrders(c configuration, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
 	/*Loop until we run out of things to do*/
 	var max int = c.TrnxRecords
 	var loop int = 0
@@ -415,9 +418,11 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 	var quit bool = false
 
 	for { //forever
-		//log.Printf("WORKER-%d: %d remaining", wid, remaining)
+		log.Printf("WORKER-%d: Started", wid)
 
-		log.Printf("WORKER-%d: Attempting to start transaction\n", wid)
+		if c.Verbose {
+			log.Printf("WORKER-%d: Attempting to start transaction\n", wid)
+		}
 
 		trnx, err := g.Conn.Begin()
 		if err != nil {
@@ -480,8 +485,10 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			retchan <- chanReturn{ok: false, message: err.Error()}
 			return
 		}
-		log.Printf("WORKER-%d: Committed %d orders", wid, loop)
-		all = +loop
+		if c.Verbose {
+			log.Printf("WORKER-%d: Committed %d orders", wid, loop)
+		}
+		all += loop
 
 		if quit {
 			break

@@ -87,11 +87,7 @@ func main() {
 	first, rest = RecordsForWorkers(c.Orders, c.Workers)
 
 	for i := 0; i < c.Workers; i++ {
-		if i == 0 {
-			go db.PlaceOrders(c, first, i, retchan, pl)
-		} else {
-			go db.PlaceOrders(c, rest, i, retchan, pl)
-		}
+		go db.PlaceOrders(c, i, retchan, pl)
 	}
 
 	var (

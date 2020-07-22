@@ -19,6 +19,7 @@ func Test_configuration_getConfig(t *testing.T) {
 		{"Good File 02", configuration{}, args{"test_data/gdCnf002.json"}, false},
 		{"Malformed JSON 01", configuration{}, args{"test_data/malCnf001.json"}, true},
 		{"Malformed JSON 02", configuration{}, args{"test_data/malCnf002.json"}, true},
+		{"Malformed JSON 03", configuration{}, args{"test_data/malCnf003.json"}, true},
 		{"Extra Field 01", configuration{}, args{"test_data/exfCnf001.json"}, false},
 		{"Missing Field 01", configuration{}, args{"test_data/mssngFld.json"}, true},
 		{"Bad Configuration 01", configuration{}, args{"test_data/badCnf01.json"}, true},
@@ -39,7 +40,7 @@ func Test_configuration_verifyConfig(t *testing.T) {
 		c       configuration
 		wantErr bool
 	}{
-		{"Good configuration 01", configuration{Hostname: "localhost", Port: "30015", Username: "Sausage", Password: "QuietBadPassword", Schema: "GS", DropSchema: true, Workers: 10, Customers: 1000, Orders: 1000000, TrnxRecords: 10000, StartYear: 2010, EndYear: 2015}, false},
+		{"Good configuration 01", configuration{Hostname: "localhost", Port: "30015", Username: "Sausage", Password: "QuietBadPassword", Schema: "GS", DropSchema: true, Workers: 10, Customers: 1000, Orders: 1000000, TrnxRecords: 10000, StartYear: 2010, EndYear: 2015, Verbose: false}, false},
 		{"Good configuration 02", configuration{Hostname: "192.168.0.1", Port: "30040", Username: "User", Password: "Still_a_BadPassword", Schema: "GtrShop", DropSchema: false, Workers: 64, Customers: 25000, Orders: 800000000, TrnxRecords: 10000, StartYear: 2020, EndYear: 2020}, false},
 		{"Unitialised configuration", configuration{}, true},
 		{"Missing Hostname", configuration{Port: "30040", Username: "User", Password: "Still_a_BadPassword", Schema: "GtrShop", DropSchema: false, Workers: 64, Customers: 25000, Orders: 800000000, StartYear: 2020, EndYear: 2020}, true},
