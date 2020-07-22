@@ -417,8 +417,9 @@ func (g gsConn) PlaceOrders(c configuration, wid int, retchan chan<- chanReturn,
 	var all int = 0
 	var quit bool = false
 
+	log.Printf("WORKER-%d: Started", wid)
+
 	for { //forever
-		log.Printf("WORKER-%d: Started", wid)
 
 		if c.Verbose {
 			log.Printf("WORKER-%d: Attempting to start transaction\n", wid)
