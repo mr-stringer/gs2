@@ -1153,3 +1153,59 @@ func Test_gsConn_GetProductIDs(t *testing.T) {
 		})
 	}
 }
+
+func Test_gsConn_CheckForSchema(t *testing.T) {
+	type args struct {
+		schema string
+		user   string
+	}
+	tests := []struct {
+		name    string
+		g       gsConn
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{"Schema Found", gsConn{}, args{schema: "GS", user: "stringer"}, true, false},
+		{"No Schema", gsConn{}, args{schema: "GtrShp", user: "gs2User"}, false, false},
+		{"DB Error", gsConn{}, args{schema: "GtrShp", user: "gs2User"}, false, true},
+		// TODO: Add test cases.
+	}
+
+	for _, tt := range tests {
+
+		/*Setup the DB*/
+		db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		if err != nil {
+			t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		tt.g.Conn = db
+
+		q1 := fmt.Sprintf("SELECT COUNT(SCHEMA_NAME) AS SCHEMA FROM SCHEMAS WHERE SCHEMA_NAME = '%s' AND SCHEMA_OWNER = '%s'", tt.args.schema, strings.ToUpper(tt.args.user))
+
+		/*Set up the scenarios*/
+		if tt.name == "Schema Found" {
+			q1rows := sqlmock.NewRows([]string{"SCHEMA"}).AddRow(1)
+			mock.ExpectQuery(q1).WillReturnRows(q1rows)
+
+		} else if tt.name == "No Schema" {
+			q1rows := sqlmock.NewRows([]string{"SCHEMA"}).AddRow(0)
+			mock.ExpectQuery(q1).WillReturnRows(q1rows)
+
+		} else if tt.name == "DB Error" {
+			mock.ExpectQuery(q1).WillReturnError(fmt.Errorf("DB Error"))
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.g.CheckForSchema(tt.args.schema, tt.args.user)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("gsConn.CheckForSchema() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("gsConn.CheckForSchema() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

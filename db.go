@@ -64,6 +64,18 @@ func (g gsConn) GetHanaVersion() (string, error) {
 	return version, err
 }
 
+// CheckForSchema returns true if schema exists
+func (g gsConn) CheckForSchema(schema, user string) (bool, error) {
+	var count int
+	q1 := fmt.Sprintf("SELECT COUNT(SCHEMA_NAME) AS SCHEMA FROM SCHEMAS WHERE SCHEMA_NAME = '%s' AND SCHEMA_OWNER = '%s'", schema, strings.ToUpper(user))
+	r1 := g.Conn.QueryRow(q1)
+	err := r1.Scan(&count)
+	if err != nil || count != 1 {
+		return false, err
+	}
+	return true, nil
+}
+
 // Checks that the user givene in the argument 'user' has been granted the 'MONITORING' role.  Returns true if the role is granted.UserHasMonRole
 // Returns an error if an error occurs.
 func (g gsConn) UserHasMonRole(user string) (bool, error) {
@@ -316,7 +328,6 @@ func (g gsConn) GetProductIDs(schema string) ([]randutil.Choice, error) {
 
 //GetCustomerIDs returns a slice of customer IDs which is used to randomise customers
 func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
-	log.Printf("GetCustomerIDs: Getting customers IDs from the database")
 	q1 := fmt.Sprintf("SELECT COUNT(ID) FROM \"%s\".\"CUSTOMERS\"", schema)
 	r := g.Conn.QueryRow(q1)
 	var count int
@@ -352,7 +363,9 @@ func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
 
 //CreatePayload is a function that runs as a goroutines and creates the random data for the customer inserts
 func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
-	log.Printf("CreatePayload: Getting Product IDs\n")
+	if c.Verbose {
+		log.Printf("CreatePayload: Getting Product IDs\n")
+	}
 	prodIDs, err := g.GetProductIDs(c.Schema)
 	if err != nil {
 		log.Printf("CreatePayload: failed to get product IDs\n")
@@ -361,7 +374,9 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 		os.Exit(-1)
 	}
 
-	log.Printf("CreatePayload: Customer Product IDs\n")
+	if c.Verbose {
+		log.Printf("CreatePayload: Getting Customer Product IDs\n")
+	}
 	CustIDs, err := g.GetCustomerIDs(c.Schema)
 	if err != nil {
 		log.Printf("CreatePayload: failed to get customer IDs\n")
@@ -370,7 +385,6 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 		os.Exit(-1)
 	}
 
-	log.Printf("CreatePayload: Making Channels")
 	/*Make channels for random products*/
 	rndProd := make(chan int, c.Workers*2) /*bueffered channel length = workers*2*/
 
@@ -380,17 +394,19 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	/*Make channels for random dates*/
 	rndDate := make(chan time.Time, c.Workers*2) /*bueffered channel length = workers*2*/
 
-	log.Printf("CreatePayload: Stating goroutines")
 	go RandomProductID(c.Orders, prodIDs, rndProd)
 	go RandomCustomerID(c.Orders, CustIDs, rndCust)
 	go RandomDate(c, rndDate)
 
 	log.Printf("CreatePayload: Started producing payloads\n")
 
-	for i := 0; i < c.Orders; i++ {
-		/*progress update to be generated every 100,000 payloads*/
+	/*figure out 5% of c.Orders and use that for percentage calculating*/
+	fvPct := float32(c.Orders) * 0.05
+	fvPctInt := int(fvPct)
 
-		if i%c.TrnxRecords == 0 {
+	for i := 0; i < c.Orders; i++ {
+
+		if i%fvPctInt == 0 && i != 0 {
 			log.Printf("CreatePayload: %d of %d payloads created (%.2f%%)\n", i, c.Orders, float32(i)/float32(c.Orders)*100)
 		}
 
@@ -407,17 +423,20 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 //wid is the worker id, this should be unique
 //errchan is a channel where the main process can check for any errors being sent back.
 //A transaction size of 10,000 records is currently in place, this will be made variable in the future
-func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
+func (g gsConn) PlaceOrders(c configuration, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
 	/*Loop until we run out of things to do*/
 	var max int = c.TrnxRecords
 	var loop int = 0
 	var all int = 0
 	var quit bool = false
 
-	for { //forever
-		//log.Printf("WORKER-%d: %d remaining", wid, remaining)
+	log.Printf("WORKER-%d: Running", wid)
 
-		log.Printf("WORKER-%d: Attempting to start transaction\n", wid)
+	for { //forever
+
+		if c.Verbose {
+			log.Printf("WORKER-%d: Attempting to start transaction\n", wid)
+		}
 
 		trnx, err := g.Conn.Begin()
 		if err != nil {
@@ -480,8 +499,10 @@ func (g gsConn) PlaceOrders(c configuration, count int, wid int, retchan chan<- 
 			retchan <- chanReturn{ok: false, message: err.Error()}
 			return
 		}
-		log.Printf("WORKER-%d: Committed %d orders", wid, loop)
-		all = +loop
+		if c.Verbose {
+			log.Printf("WORKER-%d: Committed %d orders", wid, loop)
+		}
+		all += loop
 
 		if quit {
 			break

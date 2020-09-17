@@ -11,19 +11,21 @@ import (
 )
 
 type configuration struct {
-	Hostname    string
-	Port        string
-	Username    string
-	Password    string
-	Schema      string
-	DropSchema  bool
-	Workers     int
-	Customers   int
-	Orders      int
-	TrnxRecords int
+	Hostname          string
+	Port              string
+	Username          string
+	Password          string
+	Schema            string
+	DropSchema        bool
+	UseExistingSchema bool
+	Workers           int
+	Customers         int
+	Orders            int
+	TrnxRecords       int
 	//InsertMode string Insert mode is no longer required.  Will always run using transactions
 	StartYear int
 	EndYear   int
+	Verbose   bool
 }
 
 // getConfig the specified configuration file and attempts to marshall it's content into the
@@ -69,7 +71,7 @@ func (c *configuration) verifyConfig() error {
 		s1 := fmt.Sprintf("%v", v.Field(i).Interface())
 		if s1 == "" || s1 == "0" {
 			/*Exclude TrnxRecords*/
-			if typeOfS.Field(i).Name == "TrnxRecords" {
+			if typeOfS.Field(i).Name == "TrnxRecords" || typeOfS.Field(i).Name == "Verbose" {
 				continue
 			}
 			log.Printf("Field: %s has no value set\n", typeOfS.Field(i).Name)
@@ -115,6 +117,12 @@ func (c *configuration) verifyConfig() error {
 	/*Trnx must be between 100 and 10,000,000 check that it is*/
 	if c.TrnxRecords > 10000000 || c.TrnxRecords < 100 {
 		log.Printf("verifyConfig: TrnxRecords must cannot be lower than 100 or higher than 10,000,000")
+		return errors.New("TrnxRecords not accepted")
+	}
+
+	/*DropSchema and UseExistingSchema are mutually exclusive*/
+	if c.DropSchema && c.UseExistingSchema {
+		log.Printf("verifyConfig: DropSchema and UseExistingSchema are mutually exclusive, they cannot both be set to true")
 		return errors.New("TrnxRecords not accepted")
 	}
 
