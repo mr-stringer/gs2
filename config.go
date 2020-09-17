@@ -11,16 +11,17 @@ import (
 )
 
 type configuration struct {
-	Hostname    string
-	Port        string
-	Username    string
-	Password    string
-	Schema      string
-	DropSchema  bool
-	Workers     int
-	Customers   int
-	Orders      int
-	TrnxRecords int
+	Hostname          string
+	Port              string
+	Username          string
+	Password          string
+	Schema            string
+	DropSchema        bool
+	UseExistingSchema bool
+	Workers           int
+	Customers         int
+	Orders            int
+	TrnxRecords       int
 	//InsertMode string Insert mode is no longer required.  Will always run using transactions
 	StartYear int
 	EndYear   int
@@ -116,6 +117,12 @@ func (c *configuration) verifyConfig() error {
 	/*Trnx must be between 100 and 10,000,000 check that it is*/
 	if c.TrnxRecords > 10000000 || c.TrnxRecords < 100 {
 		log.Printf("verifyConfig: TrnxRecords must cannot be lower than 100 or higher than 10,000,000")
+		return errors.New("TrnxRecords not accepted")
+	}
+
+	/*DropSchema and UseExistingSchema are mutually exclusive*/
+	if c.DropSchema && c.UseExistingSchema {
+		log.Printf("verifyConfig: DropSchema and UseExistingSchema are mutually exclusive, they cannot both be set to true")
 		return errors.New("TrnxRecords not accepted")
 	}
 

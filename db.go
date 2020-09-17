@@ -64,6 +64,18 @@ func (g gsConn) GetHanaVersion() (string, error) {
 	return version, err
 }
 
+// CheckForSchema returns true if schema exists
+func (g gsConn) CheckForSchema(schema, user string) (bool, error) {
+	var count int
+	q1 := fmt.Sprintf("SELECT COUNT(SCHEMA_NAME) AS SCHEMA FROM SCHEMAS WHERE SCHEMA_NAME = '%s' AND SCHEMA_OWNER = '%s'", schema, strings.ToUpper(user))
+	r1 := g.Conn.QueryRow(q1)
+	err := r1.Scan(&count)
+	if err != nil || count != 1 {
+		return false, err
+	}
+	return true, nil
+}
+
 // Checks that the user givene in the argument 'user' has been granted the 'MONITORING' role.  Returns true if the role is granted.UserHasMonRole
 // Returns an error if an error occurs.
 func (g gsConn) UserHasMonRole(user string) (bool, error) {
@@ -351,7 +363,9 @@ func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
 
 //CreatePayload is a function that runs as a goroutines and creates the random data for the customer inserts
 func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
-	log.Printf("CreatePayload: Getting Product IDs\n")
+	if c.Verbose {
+		log.Printf("CreatePayload: Getting Product IDs\n")
+	}
 	prodIDs, err := g.GetProductIDs(c.Schema)
 	if err != nil {
 		log.Printf("CreatePayload: failed to get product IDs\n")
@@ -360,7 +374,9 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 		os.Exit(-1)
 	}
 
-	log.Printf("CreatePayload: Getting Customer Product IDs\n")
+	if c.Verbose {
+		log.Printf("CreatePayload: Getting Customer Product IDs\n")
+	}
 	CustIDs, err := g.GetCustomerIDs(c.Schema)
 	if err != nil {
 		log.Printf("CreatePayload: failed to get customer IDs\n")
