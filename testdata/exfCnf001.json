@@ -1,0 +1,13 @@
+{
+    "Hostname":"test_host",
+    "Port":"30015",
+    "Username":"TEST_USER",
+    "Password":"HardPassword",
+    "Schema":"GtrShop",
+    "Workers":10,
+    "Customers":100,
+    "Orders"   :10000,
+    "StartYear":2010,
+    "EndYear":2020,
+    "SomeotherField": "Some String Data"
+}

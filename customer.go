@@ -29,7 +29,6 @@ func RandomSal(count int, sal chan<- string) {
 		sal <- fmt.Sprintf("%v", res.Item)
 	}
 	close(sal)
-	return
 }
 
 //RandomFirstIntial accepts count (int) and sends data on the fint channel.
@@ -54,7 +53,6 @@ func RandomFirstIntial(count int, fint chan<- string) {
 
 	}
 	close(fint)
-	return
 }
 
 //RandomSurname accepts count (int) and sends data on the surname channel.
@@ -78,7 +76,6 @@ func RandomSurname(count int, surname chan<- string) {
 		surname <- fmt.Sprintf("%v", res.Item)
 	}
 	close(surname)
-	return
 }
 
 //RandomStreetName accepts count (int) and sends data on the streetName channel.
@@ -102,7 +99,6 @@ func RandomStreetName(count int, streetName chan<- string) {
 		streetName <- fmt.Sprintf("%v", res.Item)
 	}
 	close(streetName)
-	return
 }
 
 //RandomTownName accepts count (int) and sends data on the townName channel.
@@ -127,7 +123,6 @@ func RandomTownName(count int, townName chan<- string) {
 
 	}
 	close(townName)
-	return
 }
 
 //RandomDiscount accepts count (int) and sends data on the discount channel.
@@ -151,7 +146,6 @@ func RandomDiscount(count int, discount chan<- int) {
 		discount <- res.Item.(int)
 	}
 	close(discount)
-	return
 }
 
 //RandomStreetNumber accepts count (int) and sends data on the streetNum channel.
@@ -193,7 +187,6 @@ func RandomStreetNumber(count int, streetNum chan<- int) {
 		}
 	}
 	close(streetNum)
-	return
 }
 
 //RecordsForWorkers is used to calculate how many records each worker should get

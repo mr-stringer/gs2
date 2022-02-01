@@ -15,16 +15,16 @@ func Test_configuration_getConfig(t *testing.T) {
 		wantErr bool
 	}{
 		{"No File", configuration{}, args{"/zzz/zzz/zzz/noFile.json"}, true},
-		{"Good File 01", configuration{}, args{"test_data/gdCnf001.json"}, false},
-		{"Good File 02", configuration{}, args{"test_data/gdCnf002.json"}, false},
-		{"Good File 03", configuration{}, args{"test_data/gdCnf003.json"}, false},
-		{"Malformed JSON 01", configuration{}, args{"test_data/malCnf001.json"}, true},
-		{"Malformed JSON 02", configuration{}, args{"test_data/malCnf002.json"}, true},
-		{"Malformed JSON 03", configuration{}, args{"test_data/malCnf003.json"}, true},
-		{"Extra Field 01", configuration{}, args{"test_data/exfCnf001.json"}, false},
-		{"Missing Field 01", configuration{}, args{"test_data/mssngFld.json"}, true},
-		{"Bad Configuration 01", configuration{}, args{"test_data/badCnf01.json"}, true},
-		{"Bad Configuration 02", configuration{}, args{"test_data/badCnf02.json"}, true},
+		{"Good File 01", configuration{}, args{"testdata/gdCnf001.json"}, false},
+		{"Good File 02", configuration{}, args{"testdata/gdCnf002.json"}, false},
+		{"Good File 03", configuration{}, args{"testdata/gdCnf003.json"}, false},
+		{"Malformed JSON 01", configuration{}, args{"testdata/malCnf001.json"}, true},
+		{"Malformed JSON 02", configuration{}, args{"testdata/malCnf002.json"}, true},
+		{"Malformed JSON 03", configuration{}, args{"testdata/malCnf003.json"}, true},
+		{"Extra Field 01", configuration{}, args{"testdata/exfCnf001.json"}, false},
+		{"Missing Field 01", configuration{}, args{"testdata/mssngFld.json"}, true},
+		{"Bad Configuration 01", configuration{}, args{"testdata/badCnf01.json"}, true},
+		{"Bad Configuration 02", configuration{}, args{"testdata/badCnf02.json"}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

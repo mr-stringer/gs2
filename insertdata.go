@@ -21,8 +21,6 @@ func RandomProductID(count int, products []randutil.Choice, ID chan<- int) {
 		ID <- IDVal
 	}
 	close(ID)
-	return
-
 }
 
 //RandomCustomerID supplies weighted random prodcuts IDs when requested
@@ -33,5 +31,4 @@ func RandomCustomerID(count int, customers []int, ID chan<- int) {
 		ID <- customers[rndel]
 	}
 	close(ID)
-	return
 }

@@ -57,8 +57,7 @@ func (g *gsConn) Connect(Dsn string) error {
 // GetHanaVersion returns a string containing the version of HANA
 func (g gsConn) GetHanaVersion() (string, error) {
 	var version string
-	var q1 string
-	q1 = "SELECT VERSION FROM \"SYS\".\"M_DATABASE\""
+	q1 := "SELECT VERSION FROM \"SYS\".\"M_DATABASE\""
 	r1 := g.Conn.QueryRow(q1)
 	err := r1.Scan(&version)
 	return version, err
@@ -286,7 +285,6 @@ func (g gsConn) WorkerInsertCustomers(wid, count int, schema string, wg *sync.Wa
 	}
 	//log.Printf("WORKER-%d: Commit sucessful\n", wid)
 	wg.Done()
-	return
 }
 
 //GetProductsIDs returns a slice of Choice which is used to draw weighted random product IDs
@@ -342,7 +340,7 @@ func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
 	rows, err := g.Conn.Query(q2)
 	if err != nil {
 		log.Printf("GetCustomerIDs:Error running query: %s\n", q2)
-		return []int{}, errors.New("Found an error")
+		return []int{}, errors.New("found an error")
 	}
 	defer rows.Close()
 
@@ -413,7 +411,6 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 		plChan <- InsertPayload{CustomerID: <-rndCust, ProductID: <-rndProd, Date: <-rndDate}
 	}
 	close(plChan)
-	return
 }
 
 //PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run

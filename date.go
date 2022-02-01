@@ -106,5 +106,4 @@ func RandomDate(c configuration, date chan<- time.Time) {
 		date <- t
 	}
 	close(date)
-	return
 }

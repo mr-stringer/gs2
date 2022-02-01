@@ -1,0 +1,12 @@
+{
+    "Hostname":"verylonghostname.verylongdomain.name.com",
+    "Port":"39040",
+    "Username":"gsu",
+    "Password":"ToughAPassword",
+    "Schema":"gs2",
+    "Workers":5,
+    "Customers":100,
+    "Orders"   :20000,
+    "StartYear":2010,
+    "EndYear":2020
+}

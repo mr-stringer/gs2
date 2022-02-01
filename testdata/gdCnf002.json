@@ -1,0 +1,12 @@
+{
+    "Hostname":"hana.domain.net",
+    "Port":"30040",
+    "Username":"gsu",
+    "Password":"ToughPassword",
+    "Schema":"Gtr001",
+    "Workers":100,
+    "Customers":1000,
+    "Orders"   :100000,
+    "StartYear":2020,
+    "EndYear":2021
+}

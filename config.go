@@ -81,7 +81,7 @@ func (c *configuration) verifyConfig() error {
 
 	if flagError {
 		log.Printf("One or more fields in the configuration was not set.  Ensure that the configuration file has all of the following parameters set:\n\tConfigName\n\tHostname\n\tPort\n\tUsername\n\tPassword\n\tSchema\n\tWorkers\n\tCustomers\n\tOrders\n\tInsertMode\n\tStartYear\n\tEndYear\n\nIf DropScema is omitted, it is set to false.")
-		return errors.New("Incomplete configuration file")
+		return errors.New("incomplete configuration file")
 	}
 
 	/* Insert mode no longer support, large inserts will always been conducted as transactions.
@@ -100,13 +100,13 @@ func (c *configuration) verifyConfig() error {
 	/*Check username - SYSTEM not allowed*/
 	if strings.ToUpper(c.Username) == "SYSTEM" {
 		log.Printf("verifyConfig: The username SYSTEM is not allowed\n")
-		return errors.New("Username SYSTEM not allowed")
+		return errors.New("username SYSTEM not allowed")
 	}
 
 	/*Only allow years from 1001 to 3000*/
 	if c.StartYear < 1001 || c.EndYear > 2999 {
 		log.Printf("verifyConfig: Start Year must be 1001 or greater and End Year can be no greater than 2999")
-		return errors.New("Date range not accepted")
+		return errors.New("date range not accepted")
 	}
 
 	/*If TrnxRecords is not set, set it to 10,000*/
