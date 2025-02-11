@@ -19,7 +19,7 @@ type gsConn struct {
 	Connected bool /*defaults to false which is what I want :) */
 }
 
-//InsertPayload provides the data required to insert an order
+// InsertPayload provides the data required to insert an order
 type InsertPayload struct {
 	CustomerID int
 	ProductID  int
@@ -29,8 +29,10 @@ type InsertPayload struct {
 // Creates a connection to the database thus populating the Conn struct.
 func (g *gsConn) Init(c configuration) error {
 	log.Print("Initalising connection")
+	log.Print(g.PrintDsn(c.Username, c.Password, c.Hostname, c.Port))
 	err := g.Connect(g.PrintDsn(c.Username, c.Password, c.Hostname, c.Port))
 	if err != nil {
+		log.Print(err.Error())
 		log.Panicf("Could not initialise database connection.  Probably wrong details or DB is not up\n")
 		return err
 	}
@@ -178,7 +180,7 @@ func (g gsConn) InsertProducts(schema string) error {
 	return nil
 }
 
-//TransactRows takes a single argument, a slice of strings.  The will all be passed to the database uning the Exec function in a single transaction
+// TransactRows takes a single argument, a slice of strings.  The will all be passed to the database uning the Exec function in a single transaction
 // if this fails for any reason, the function will return an error.  The log will contain information about the error.  If an error occurs it
 // is unlikely that the program should continue.
 func (g gsConn) TransactExecRows(statements []string) error {
@@ -218,7 +220,7 @@ func (g gsConn) TransactExecRows(statements []string) error {
 	return nil
 }
 
-//WorkerInsertCustomers is design to work as a go rountine as part of a weight group
+// WorkerInsertCustomers is design to work as a go rountine as part of a weight group
 // wid should be a unique int representing the Worker ID
 // count is the number of customers to insert
 // schema is the schema in which to inser the customers
@@ -287,7 +289,7 @@ func (g gsConn) WorkerInsertCustomers(wid, count int, schema string, wg *sync.Wa
 	wg.Done()
 }
 
-//GetProductsIDs returns a slice of Choice which is used to draw weighted random product IDs
+// GetProductsIDs returns a slice of Choice which is used to draw weighted random product IDs
 func (g gsConn) GetProductIDs(schema string) ([]randutil.Choice, error) {
 	q1 := fmt.Sprintf("SELECT COUNT(ID) FROM \"%s\".\"PRODUCT\"", schema)
 	r := g.Conn.QueryRow(q1)
@@ -324,7 +326,7 @@ func (g gsConn) GetProductIDs(schema string) ([]randutil.Choice, error) {
 
 }
 
-//GetCustomerIDs returns a slice of customer IDs which is used to randomise customers
+// GetCustomerIDs returns a slice of customer IDs which is used to randomise customers
 func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
 	q1 := fmt.Sprintf("SELECT COUNT(ID) FROM \"%s\".\"CUSTOMERS\"", schema)
 	r := g.Conn.QueryRow(q1)
@@ -359,7 +361,7 @@ func (g gsConn) GetCustomerIDs(schema string) ([]int, error) {
 
 }
 
-//CreatePayload is a function that runs as a goroutines and creates the random data for the customer inserts
+// CreatePayload is a function that runs as a goroutines and creates the random data for the customer inserts
 func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	if c.Verbose {
 		log.Printf("CreatePayload: Getting Product IDs\n")
@@ -413,13 +415,13 @@ func (g gsConn) CreatePayload(c configuration, plChan chan<- InsertPayload) {
 	close(plChan)
 }
 
-//PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run
-//It takes a number of arguments.
-//configuration is the gs2 configuration struct
-//count is the total number of orders for this instance to insert
-//wid is the worker id, this should be unique
-//errchan is a channel where the main process can check for any errors being sent back.
-//A transaction size of 10,000 records is currently in place, this will be made variable in the future
+// PlaceOrders is used to place orders in the database.  The workers element of the configuration struct decides how many instances of the function will run
+// It takes a number of arguments.
+// configuration is the gs2 configuration struct
+// count is the total number of orders for this instance to insert
+// wid is the worker id, this should be unique
+// errchan is a channel where the main process can check for any errors being sent back.
+// A transaction size of 10,000 records is currently in place, this will be made variable in the future
 func (g gsConn) PlaceOrders(c configuration, wid int, retchan chan<- chanReturn, payloadChan <-chan InsertPayload) {
 	/*Loop until we run out of things to do*/
 	var max int = c.TrnxRecords
