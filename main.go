@@ -29,6 +29,7 @@ func main() {
 
 	err = db.Conn.Ping()
 	if err != nil {
+		log.Println(err.Error())
 		log.Fatalf("Can't ping DB, can't continue\n")
 	}
 
@@ -132,5 +133,6 @@ func main() {
 	log.Printf("========================\n")
 	log.Printf("Orders took %.2f seconds\n", InsEnd.Sub(InsStart).Seconds())
 	log.Printf("Total time %.2f seconds\n", End.Sub(start).Seconds())
+	log.Printf("Average rate of %.2f orders per second", float32(c.Orders)/float32((End.Sub(start).Seconds())))
 	os.Exit(0)
 }
